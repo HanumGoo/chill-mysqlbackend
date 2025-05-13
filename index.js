@@ -21,9 +21,19 @@ const db = mysql2.createPool({
     const [rows] = await db.query('SELECT * FROM user WHERE user_id = ?', [id]);
     return rows;
   };
+//dapet data user berdasarkan username
+  export async function getUserByUsername(username) {
+    const [rows] = await db.query('SELECT * FROM user WHERE username = ?', [username]);
+    return rows;
+  };
+//dapet data user berdasarkan email
+  export async function getUserByEmail(email) {
+    const [rows] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
+    return rows;
+  };
 //input data ke table user
   export async function createUser(user) {
-    const [result] = await db.query('INSERT INTO user (username, password, email, avatar) VALUES (?, ?, ?, ?)', [user.username, user.password, user.email, user.avatar]);
+    const [result] = await db.query('INSERT INTO user (username, password, email, avatar, verify_token) VALUES (?, ?, ?, ?, ?)', [user.username, user.hasher, user.email, user.avatar, user.verify_token]);
     return getUserById(result.insertId);
   };
 //update data user
@@ -36,3 +46,53 @@ const db = mysql2.createPool({
     const [result] = await db.query('DELETE FROM user WHERE user_id = ?', [id]);
     return result.affectedRows > 0;
   };
+
+//=========================================================
+
+//dapet semua data film
+export async function getFilm() {
+  const [rows] = await db.query('SELECT * FROM episode_movie');
+  return rows;
+};
+//dapet film berdasarkan genre
+export async function getFilmByGenreId(genre) {
+  const [rows] = await db.query('SELECT * FROM episode_movie WHERE genre_id = ?', [genre]);
+  return rows;
+};
+//dapet film berdasarkan id film
+export async function getFilmById(id) {
+  const [rows] = await db.query('SELECT * FROM episode_movie WHERE epsmov_id = ?', [id]);
+  return rows;
+};
+//sort semua film berdasarkan abjad
+export async function getFilmSort() {
+  const [rows] = await db.query('SELECT * FROM episode_movie ORDER BY title ASC');
+  return rows;
+};
+//search semua film berdasarkan title(contains)
+export async function getFilmSearch(title) {
+  const [rows] = await db.query('SELECT * FROM episode_movie WHERE title LIKE ?', [`%${title}%`]);
+  return rows;
+};
+//function untuk nerima query params
+export async function getFilmQuery(query, params) {
+  const [rows] = await db.query(`SELECT * FROM episode_movie${query}`, params);
+  return rows;
+};
+
+//=========================================================
+//verification token
+
+export async function verifyEmailByToken(data) {
+  const [rows] = await db.query('SELECT * FROM user WHERE email = ? and verify_token = ?', [data.email, data.token]);
+  if (rows.length === 0) {
+    
+    return false;
+  }
+  else {
+    const [updateResult] = await db.query('UPDATE user SET already_verify = true WHERE email = ? and verify_token = ?', [data.email, data.token]);
+    return true;
+  }
+  
+}
+
